@@ -30,7 +30,18 @@ Since there are interdependencies between deployment configurations, please make
 1) build and deploy the database
 2) build and deploy the Matomo analytics server and proxy
 
-The scripts in [openshift-developer-tools](https://github.com/BCDevOps/openshift-developer-tools) can be used to manage the builds and deployments.
+Note: The TAG_NAME in the matomo-deploy is used for both the proxy and matomo which is annoying. That's why there is the rename from 3.11.0-fpm to latest
+
+```
+oc new-app -p NAME=mariadb -p OUTPUT_IMAGE_TAG=latest -f mariadb/mariadb-build.json
+oc new-app -p NAME=matomo -p OUTPUT_IMAGE_TAG=latest -p SOURCE_IMAGE_TAG=3.11.0-fpm -f matomo/matomo-build.json 
+
+oc new-app -p NAME=matomo-proxy OUTPUT_IMAGE_TAG=latest -f matomo-proxy/matomo-proxy-build.json
+
+oc new-app -p IMAGE_NAMESPACE=matomo -p TAG_NAME=latest -p NAME=matomo-db -p PERSISTENT_VOLUME_CLASS=glusterfs-storage -f matomo-db/matomo-db-deploy.json 
+
+oc new-app -p NAME=matomo -p IMAGE_NAMESPACE=matomo -p TAG_NAME=latest -p PERSISTENT_VOLUME_CLASS=glusterfs-storage -f matomo/matomo-deploy.json
+```
 
 ## First Run
 Once everything is up and running in OpenShift, follow the [instructions](https://matomo.org/docs/installation/#the-5-minute-matomo-installation) to create your superuser, set-up the connection to the database and initialize the Matomo dashboard.
